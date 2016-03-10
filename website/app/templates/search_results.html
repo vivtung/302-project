@@ -1,0 +1,45 @@
+<!-- extend base layout -->
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Search results for "{{ query }}":</h1>
+        <div class="container">
+        <div class="row text-center">
+      
+   
+
+{% for course in cresult %}
+
+	{% if course is defined %}
+
+            <div class="col-md-4 col-sm-6 hero-feature">
+                    <div class="caption">
+                      <div class="thumbnail">
+                        <img src="../../static/Img/Screen%20Shot%202015-02-27%20at%2010.04.36%20AM.png" alt="class">
+                        <div class="caption">
+                          <h3>{{ course.name }}</h3>
+                          <p>{{ course.description }}</p>
+                           <p>Created by {{ course.app_users.email}}</p>
+                           <p><a href="{{ url_for('course_description', courseId=course.course_id) }}" class="btn btn-primary" role="button">GO</a>
+                           {% if g.user.is_authenticated() %}
+                           <a href="{{ url_for('subscribe', courseId=course.course_id)}}" type="submit" class="btn btn-danger" role="button">Subscribe!</a>
+                           {%  endif %}
+                           </p>
+                        </div> <!-- end div caption class -->
+                      </div> <!-- thumbnail -->
+                </div>
+            </div>
+
+	{% endif %}
+	
+{% else %}
+	<p>Cannot find anything</p>
+{% endfor %}
+
+
+
+
+  
+  </div>
+  </div>
+{% endblock %}

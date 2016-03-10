@@ -1,0 +1,31 @@
+#jumbo{
+    display: block;
+	background-image: url(../../static/Img/worldclass.png);
+    background-size: cover;
+    height: 325px;
+}
+#titletext{
+    margin-top: 0;
+    padding-top: 100px;
+    text-align: center;
+    font-size: 5em;
+    color: black;
+}
+
+#searchbar{
+    width: 40%;
+    height: 200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#extraPadding{
+    margin-right: 40px;
+    margin-left: 40px;
+}
+
+#search_button{
+    margin-left: 37%;
+    padding-left: 30px;
+    padding-right: 30px;
+}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Edit Course{% endblock %}
+{% block head %}
+	 <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+	 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/coursePage.css') }}">
+	 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/course.css') }}">
+	 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/editVideo2.css') }}">
+
+{% endblock %}
+{% block content %}
+
+<div class="container">
+	<div class="row centered">
+		<div class="col-lg-4 col-lg-offset-4">
+			<h1>Course Edit</h1>
+			<hr>
+		</div>
+	</div><!-- /row -->
+
+	<div class="row">
+		<div class="col-lg-7 col-md-7 col-xs-12">
+			<form id="courseInfo" action="/courses/{{course_id}}/edit" method="POST">
+				
+				<label for="coursename">Course Name</label>
+				<input class="form-control input-sm chat-input" id="name" name="name" value="{{ create_course_form.name }}" maxlength="40"> 
+			
+			
+				<label for="courseDes">Description</label>
+				<textarea class="form-control input-sm chat-input" name="description" id="description" rows="5">{{ create_course_form.description }}</textarea> 
+			
+			
+				<label for="category_id">Category:</label>
+				{{ create_course_form.category_id (class="form-control input-lg") }}
+				{% if error %}
+					<div>
+					<p>{{error}}</p>
+						<h5 style="color:#FF0000">Fields cannot be empty and Course Name must be under 40 char</h5>
+					</div>
+		          {% endif %}
+				</br>
+				{{ create_course_form.csrf_token }}
+				<input type="submit" class="btn btn-primary" value="submit">
+			</form>
+		</div>
+	</div>
+</div>
+
+{% endblock %}
+
+

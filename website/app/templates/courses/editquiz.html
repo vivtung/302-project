@@ -1,0 +1,142 @@
+{% extends "base.html" %} 
+{% block title %}Video Edit{% endblock %} 
+{% block content %}
+		<div class="container">
+			<div class="row">
+				<div class="col-sm-4">
+					<iframe width="647" height="360" src="/video/{{ video.course_video_id }}" frameborder="0"></iframe>
+				</div>
+			</div>
+
+			<div class="row">
+				<!--<b>Video Name</b>: <span id="vidname">Video Name Here</span>
+				<a href="#" class="navbar-btn btn btn-success" data-toggle="modal" data-target="#chname">
+					<span class="glyphicon glyphicon-pencil"></span> edit
+				</a>-->
+			</div>
+
+			<div class="row">
+				<h1>Questions</h1>
+				<ul id="questions" class="list-group">
+		
+					{% set i = 1 %}
+					{% for question in questions %}
+					
+					<li class="list-group-item">
+						<h4><b>Question {{ i }}</b></h4>
+					
+						<p>{{ question.question_string }}</p>
+						
+
+											
+					<a href="#" class="navbar-btn btn btn-success" data-toggle="modal" data-target="#{{i}}">
+						<span class="glyphicon glyphicon-pencil"></span> edit
+					</a>
+					<a href="{{ url_for('delete_video_question', courseId=courseId, videoId=videoId, questionId=question.question_id ) }}" class="btn btn-danger"> Delete <i class="glyphicon glyphicon-remove"></i></a>
+
+
+				<div class="modal fade" id="{{i}}" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
+					<div class="modal-dialog">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h4>Edit Question{{question.question_string}}</h4>
+							</div>
+							<div class="modal-body">
+							{% if question is defined%}
+							{% include "courses/quizmodal.html"%}
+							{%endif%}
+							</div>
+						</div>
+					</div>
+		<a href="{{ url_for('edit_course_videos', courseId=courseId) }}" class="btn btn-info" role="button">Back</a>
+
+</div>
+
+				
+				
+					
+						{% set i= i + 1 %}
+					</li>
+					{% endfor %}
+				
+
+				</ul>
+				<a href="#" class="navbar-btn btn btn-primary" data-toggle="modal" data-target="#mkq">
+					<span class="glyphicon glyphicon-star"></span> Add Question
+				</a>
+			</div>
+			<br>
+			<a href="{{ url_for('edit_course_videos', courseId=courseId) }}" class="btn btn-info" role="button">Back</a>
+		</div>
+
+	<!--Modals-->
+		<!--Add tag popup-->
+		<div class="modal fade" id="chname" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
+			<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4>Change Video Name</h4>
+				</div>
+				<div class="modal-body">
+						<input type="text" class="form-control"></input>
+					<input type="button" class="btn btn-warning" onclick="assumed something will do it" value="Change">
+				</div>
+				</div>
+			</div>
+		</div>
+
+		<!--Add question popup-->
+		<div class="modal fade" id="mkq" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
+			<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4>New Question</h4>
+				</div>
+				<div class="modal-body">
+					<form action="{{ url_for('add_question', courseId=courseId, videoId=videoId ) }}" method="POST">
+						<div class="form-group">
+							<label>Time:</label> <br>
+							<input type="text" name="min"></input> : 
+							<input type="text" name="sec"></input>
+						</div>
+						<div class="form-group">
+							<label>Question text</label>
+							<textarea type="text" name="question_string" class="form-control"></textarea>
+						</div>
+
+						<div class="form-group">
+							<label>4 Multiple Choices</label>
+							<input type="text" name="choice_A" class="form-control" style="display:inline"></input>
+							<input type="text" name="choice_B" class="form-control" style="display:inline"></input>
+							<input type="text" name="choice_C" class="form-control" style="display:inline"></input>
+							<input type="text" name="choice_D" class="form-control" style="display:inline"></input>
+						</div>
+
+						<div class="form-group">
+							<label for="answer_choice">Correct Answer Choice</label>
+							<input type="text" name="answer_choice" id="answer_choice" class="form-control" style="display:inline"></input>
+
+					
+						</div>
+						<!--<a href="url_for ('add_question', courseId=)"> -->
+						<input type="submit" class="btn btn-success"></input>
+						<!-- </a> -->
+					</form>
+				</div>
+			</div>
+			</div>
+		</div>
+
+{%endblock%}
+
+{% block script %}
+<script>
+		$(document).ready(function(){
+		    $("button").click(function(){
+		        $.ajax({url: "demo_test.txt", success: function(result){
+		            $("#div1").html(result);
+		        }});
+		    });
+		});
+</script>
+{% endblock %}

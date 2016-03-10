@@ -1,0 +1,140 @@
+<!-- extend base layout -->
+{% extends "base.html" %}
+
+{% block content %}
+  <style type="text/css">
+/* @group core */
+.wrapper { width: 850px; overflow: hidden; margin: 0 auto; background: none; }
+
+header { height: 100px; background-color: #afafaf; }
+
+header #usernav { float: right; line-height: 100px; font-size: 14px; font-weight: bold; color: #555; }
+header #usernav a { color: #444; text-shadow: 0px 1px 1px #ddd; }
+header #usernav a span img { position: relative; top: 8px; background: #cecece; margin-left: 5px; padding: 3px; border: 1px solid #969696; }
+
+#content { display: block; width: 820px; margin: 0 auto;  }
+#left { display: block; width: 560px; float: left; overflow: hidden; margin-right: 20px; }
+#right { display: block; width: 240px; float: left; overflow: hidden; }
+
+#userStats { display: block; width: auto; background-color: #f9f9f9; border: 1px solid #ccc; -moz-border-radius: 5px; -webkit-border-radius: 5px; border-radius: 5px; padding: 12px; }
+
+#userStats .data .sep { clear: both; margin-top: 40px; width: 320px; height: 1px; border-bottom: 1px solid #ccc; margin-bottom: 0; }
+#userStats .data ul.numbers { list-style: none; width: 320px; padding-top: 7px; margin-top: 0; border-top: 1px solid #fff; color: #676767; }
+#userStats .data ul.numbers li { width: 95px; float: left; display: block; padding-left: 8px; height: 50px; border-right: 1px dotted #bbb; text-transform: uppercase; }
+#userStats .data ul.numbers li strong { color: #434343; display: block; font-size: 3.4em; line-height: 1.1em; font-weight: bold; }
+</style>
+	<div id="content" class="clearfix">
+		<section id="left" style="
+    width: 400px;
+    height: 200px">
+			<div id="userStats" class="clearfix"style="
+    height: 194px;
+    width: 400px;
+" >
+				
+				
+				<div class="data" style="
+    height: 194px;
+    width: 400px;
+">
+					<h1>{{ user.email }}</h1>
+					
+					<div class="sep"></div>
+					<ul class="numbers clearfix" style="
+    height: 194px;
+    width: 400px;
+">
+						<li>Follows<strong>{{ following | count }}</strong></li>
+						<li>Followers<strong>{{followers | count }}</strong></li>
+				{% if g.user.is_authenticated() %}
+				{% if user.id == g.user.id %}
+                 <a href="/courses/list" class="btn btn-primary" role="button" style="
+    padding-left: 12px;
+    border-left-width: 1px;
+    margin-left: 12px;
+    margin-top: 15px;
+    width: 126px;
+">Edit profile</a>
+                {% elif not g.user.is_following(user) %}
+                   <a href="{{ url_for('follow', user_id=user.id) }}" class="btn btn-primary" role="button" style="
+    padding-left: 12px;
+    border-left-width: 1px;
+    margin-left: 15px;
+    margin-top: 15px;
+">Follow</a>
+                {% else %}
+                  <a href="{{ url_for('unfollow', user_id=user.id) }}" class="btn btn-primary" role="button" style="
+    padding-left: 12px;
+    border-left-width: 1px;
+    margin-left: 15px;
+    margin-top: 15px;
+">Unfollow</a>
+                {% endif %}
+                {%endif%}
+					</ul>
+				</div>
+			</div>
+			
+		</section>
+		
+		<section id="right">
+			<div class="gcontent">
+				<div class="head"><h1>Following:</h1></div>
+				<div class="boxy">
+					<div class="badgeCount">	
+					 {% for f in following %}
+    	<h3>{{ f.email }}</h3>
+    {% endfor %}
+				</div>
+					
+				</div>
+			</div>
+			
+			<div class="gcontent">
+				<div class="head"><h1>Followers:</h1></div>
+				<div class="boxy">
+					
+					<div class="friendslist clearfix">
+						 {% for f1 in followers %}
+    	<h3>{{ f1.email }}</p></h3>
+    {% endfor %}
+					</div>
+					
+				</div>
+			</div>
+		</section>
+	</div>
+
+
+
+
+    <hr>
+ <div class="container">
+ 	{% if course is defined %}
+ 	<p><strong>{{ user.email }} has created:</strong></p>
+	{% for c in course %}
+	
+	
+	  <div class="col-md-3 col-sm-6">
+                <div class="thumbnail">
+                    <img src="/static/photos/uploads/{{c.image}}" alt="class">
+                    <div class="caption">
+                        <h3>{{ c.name }}</h3>
+                        <p>Rating: {{ c.rating| round(1, 'floor') }} / 5</p>
+                        <p>Course Description: {{ c.description }}</p>
+                        <p><a href="{{ url_for('course_description', courseId=c.course_id) }}" class="btn btn-primary" role="button">GO</a> {% if g.user.is_authenticated() %}
+                            <a href="{{ url_for('subscribe', courseId=c.course_id)}}" type="submit" class="btn btn-danger" role="button">Subscribe!</a> {% endif %}
+                        </p>
+                    </div>
+                    <!-- end div caption class -->
+                </div>
+                <!-- thumbnail -->
+            </div>
+ 
+	{% else %}
+	<p>this person didn't create new courses</p>
+	{% endfor %}
+	
+	{% endif %}
+	</div>
+{% endblock %}

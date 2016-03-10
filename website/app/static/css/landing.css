@@ -1,0 +1,177 @@
+/*
+html{
+    
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    height: auto;
+    background-repeat: no-repeat;
+}
+*/
+
+/*.jumboBackGround{
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background-image: url(Img/Screen%20Shot%202015-02-26%20at%203.56.50%20PM.png);
+    height: 100%%;
+    z-index: -1; #### z-index -1 placed behind text
+    position: absolute;
+    right: 0;
+    top: 0;
+    overflow: hidden; ######what happens if text go over the div box 
+}*/
+
+a {
+  text-decoration: none;
+  color: white;
+}
+
+#wrap {
+  position: fixed;
+  z-index: -1;
+  top: 0;
+  left: 0;
+  background-color: white;
+}
+
+#dark-overlay {
+  position: fixed;
+  z-index: -1;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: black;
+  opacity: 0.5;
+}
+
+#wrap img.bgfade {
+position: absolute;
+top: 0;
+display: none;
+width: 100%;
+height: 100%;
+z-index: -1;
+}
+
+.jumboBackGround li {
+    list-style-type: none;
+    display: inline;
+    font-color: white;
+}
+
+/***************** NAVIGATION ******************/
+/* #not-login-nav-rightside li a isn't working
+   so we hard coded a to be white. */
+
+#not-login-nav-rightside {
+    padding-top: 40px;
+    width: 250px;
+    text-align: left;
+    padding-bottom: 10px;
+    color: white;
+}
+
+#not-login-nav-rightside a{
+    padding-left: 10px;
+    text-decoration: none;
+    color: white;
+}
+
+#nav-rightside{
+    padding-top: 40px;
+    
+    width: 100px;
+    text-align: left;
+
+    padding-bottom: 10px;
+
+}
+
+#nav-leftside{
+    padding-top: 10px;
+    width: 400px;
+}
+
+#nav-rightside a{
+    padding-left: 10px;
+    text-decoration: none;
+    color: white;
+}
+
+#nav-leftside a{
+    text-decoration: none;
+    color: white;
+}
+
+
+
+#loggedInRightSide a{
+    padding-left: 10px;
+    text-decoration: none;
+    color: white;
+}
+/***************** ********* ******************/
+
+.heroframe{
+    font-size: 70em;
+    align-content: center;
+    align-items: center;
+    width: 700px;
+    margin: auto;
+    text-align: center;
+    padding-top: 200px;
+    height: 500px;
+}
+
+.heroframe h1{
+    font-size: 50px;
+}
+.heroframe p{
+    color: white;
+    font-size: 18.2px;
+}
+
+#heroFont{
+    color: white;
+}
+
+.btn-semi-transparent {
+background-color: rgba(255,255,255,0.5);
+border-style: none;
+}
+
+.btn-semi-transparent:hover {
+background-color: rgba(0,0,0,0.35);
+}
+
+.btn-contrast:hover, .btn-contrast:focus {
+border-color: #676c6e;
+border-bottom-color: #444749;
+color: #fff;
+}
+
+.btn:hover, .btn:focus {
+text-decoration: none;
+}
+
+.btn-large {
+padding: 9px 27px;
+font-size: 16px;
+}
+
+.btn {
+display: inline-block;
+margin-bottom: 0;
+border-radius: 2px;
+text-align: center;
+vertical-align: middle;
+font-weight: bold;
+line-height: 1.43;
+-webkit-user-select: none;
+white-space: nowrap;
+cursor: pointer;
+box-sizing: border-box;
+}

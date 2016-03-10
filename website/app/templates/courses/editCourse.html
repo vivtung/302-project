@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Edit Course{% endblock %}
+{% block head %}
+        <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/course.css') }}">
+{% endblock %}
+
+
+
+{% block content %}
+<div class="container">
+	<div class="row centered">
+		<div class="col-lg-4 col-lg-offset-4">
+			<h1>{{ course.name }}</h1>
+			<hr>
+		</div>
+	</div><!-- /row -->
+	<div>
+		<form id="courseInfo" action="{{url_for('modify_course', courseId=course.course_id) }}" method="post">
+			<div class="form-group">
+				<label for="coursename">Course Name</label>
+				{{ course_form.name (placeholder="{{ course.name }}", class="form-control", id="name") }}
+				<input type="text" class="form-control" id="name" name="name" value="{{ course.name }}">
+			</div>
+			<div class="form-group">
+				<label for="courseDes">Description</label>
+				<textarea rows='5' class="form-control" name="description" id="description">{{ course.description }}</textarea>
+			</div>
+			<div class="form-group">
+				<label for="category_id">Category:</label>
+				<select class="form-control" id="category_id" name="category_id">
+					<option value="1">Design</option>
+					<option value="2">Web</option>
+					<option value="3">Business</option>
+					<option value="4">3D + Animation</option>
+					<option value="5">Music</option>
+				</select>							
+			</div>
+			<input type="submit" class="btn btn-primary" value="submit">
+		</form>
+
+	</div>
+
+
+</div>
+
+
+
+{% endblock %}

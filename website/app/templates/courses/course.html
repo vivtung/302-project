@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}{{ course.name }}{% endblock %}
+{% block head %}
+        <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/course.css') }}">
+{% endblock %}
+
+{% block content %}
+		<div class='overlay'></div>
+
+	    <div class="container">
+	    	<div class="row centered">
+				<div class="col-lg-4 col-lg-offset-4">
+					<h1>{{ course.name }}</h1>
+					<div><i class="fa fa-user"></i> <a href="{{ url_for('user', user_id=course.instructor_user_id) }}">created by {{ course.instructor_user_email }}</a></div>
+					Ratings: {{ avg_ratings | round(1, 'floor') }} / 5
+					<hr>
+				</div>
+			</div><!-- /row -->
+
+			<div class="row">
+				<div class="col-lg-7 col-md-7 col-xs-12">
+					<h3><b>Course Description:</b></h3>
+                    <p>{{ course.description }}</p>
+                    <br>
+                    {% if g.user.id == course.instructor_user_id %}
+					<div class="button-delete">
+		              <a href="/courses/{{course.course_id}}/edit" class="btn btn-warning"> Modify <i class="glyphicon glyphicon-pencil"></i></a>
+		            </div>
+					{% endif %}
+				</div>
+				
+				
+
+				<!--Add your picture here-->
+				<div class="col-lg-5 col-md-5 col-xs-12">
+					<div class="container-fliud">
+						<img src="/static/photos/uploads/{{course.image}}"></img>
+					</div>
+
+				</div>
+
+			</div>
+			<hr>
+			<div class="row">
+				<div class="col-lg-7 col-md-7 col-xs-12">
+				
+					<div class="list-group">	
+						<div class="week1">
+							{% if videos is defined%}
+								<a href="#" class="list-group-item active" data-toggle="collapse" data-target="#wk1">
+								  <i class="fa fa-angle-right"></i> Section 1
+								</a>
+								<div id="wk1" class="sublinks collapse">
+								  {% for video in videos %}
+                                    <a href="#{{video.id}}" data-toggle="modal" class="list-group-item">
+                                      {{ video.name }}
+                                    </a>
+
+
+		<div class="modal fade" id="{{ video.id }}" tabindex="-1" role= "dialog"
+             aria-labelledby="myModalLabel" aria-hidden="true">
+          <div class="modal-dialog" style="width: 640px">
+              <div class="modal-body">
+                <iframe width="640" height="360" frameborder="0" allowfullscreen
+                        data-src="/video/{{ video.id }}"></iframe>
+		    </div>
+          </div>
+		</div>
+        <script>
+          $(function() {
+            $("#{{ video.id }}").one("shown.bs.modal", function () {
+              lzld($("#{{ video.id }} iframe")[0]);
+            });
+
+            $("#{{ video.id }}").on("shown.bs.modal", function () {
+              if (typeof $("#{{ video.id }} iframe")[0].contentWindow.playVideo != "undefined")
+                $("#{{ video.id }} iframe")[0].contentWindow.playVideo();
+            });
+
+            $("#{{ video.id }}").on("hidden.bs.modal", function () {
+              $("#{{ video.id }} iframe")[0].contentWindow.pauseVideo();
+            });
+          })
+        </script>
+										{% endfor %}
+									</div>
+							{% else %}
+								<a>No videos available</a>
+							{% endif %}
+						</div>
+					</div>
+					{% if g.user.id == course.instructor_user_id %}
+						<div class="button-delete">
+			              <a href="/courses/{{course.course_id}}/videos/change" class="btn btn-warning"> Modify <i class="glyphicon glyphicon-pencil"></i></a>
+			            </div>
+					{% endif %}
+				</div>
+
+				<div class="col-lg-5 col-md-5 col-xs-12">
+    					{% if g.user.is_authenticated() %}
+					<div class="container-fliud">
+<!--    					<button type="button" class="btn btn-danger btn-lg btn-block">Subscribe to Course!</button>	-->
+
+
+							<br>
+
+
+						<form action="{{url_for('rate_course', courseId=course.course_id)}}" method="post">	
+						<div class="row">
+							<div class="col-sm-7">
+							<label for="rating">Rate the course: </label>
+						    <select class="form-control" id="rating" name="rating" >
+				                <option value="1">1</option>
+				                <option value="2">2</option>
+				                <option value="3">3</option>
+				                <option value="4">4</option>
+				                <option value="5">5</option>
+				            </select>
+							</div>
+			        	<br>
+							<div class="col-sm-5">
+						<input type=submit class="btn btn-success" value="Submit">
+							</div>
+						</form> 
+							<div class="row container">
+							<div class="col-sm-12">
+							<br>
+	    					<a href="{{ url_for('subscribe', courseId=course.course_id)}}" type="submit" class="btn btn-danger" role="button">Subscribe to Course!</a>
+							</div>
+							</div>
+						</div> 
+					</div>{%endif%}
+			</div>
+
+			</div>
+<hr>
+			<div class="row">
+			{% if g.user.is_authenticated() %}
+			<form action="{{url_for('add_course_comment', courseId=course.course_id)}}" method="post">
+				<label for="newcomment" maxlength="200">Say something about this class!</label>
+				<textarea class="form-control" rows="4" id="newcomment" name="comment" value="{{ request.form.comment }}"></textarea>
+				<br>
+				<input type=submit class="btn btn-success" value=Comment>
+
+				</form>
+				
+				{%endif%}
+				
+				<p><br><b>Comments:</b></p>
+				<ul id="commentHistory" class="list-group">
+
+					<!--Sample comment format-->
+					{% if comments is defined %} {% for comment in comments %}
+					<li class="list-group-item">
+						<h4><b>{{ comment.commenter_name }}</b></h4>
+						<p>{{ comment.comment_date.strftime('%Y-%m-%d %H:%M:%S')}}</p>
+						<p>{{ comment.comment }}</p>
+					</li>
+					{% endfor %}
+					{% endif %}
+					<!--Sample long comment-->
+				</ul>
+			</div>
+
+		</div>
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript" src="{{ url_for('static', filename='js/course.js')}}"></script>
+{% endblock %}

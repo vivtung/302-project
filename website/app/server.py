@@ -1,0 +1,849 @@
+import os
+import json
+from flask import Flask, abort, render_template, redirect, url_for, request, session, flash, g, Response, jsonify, url_for
+from flask.ext.login import login_user, logout_user, current_user, login_required
+from functools import wraps
+from app import app, db, lm, bcrypt
+from flask.ext.wtf import Form
+from forms import *
+from models import * 
+from config import MAX_SEARCH_RESULTS
+from sqlalchemy.ext.declarative import DeclarativeMeta
+from sqlalchemy import desc
+import urlparse
+import datetime
+import re
+import random
+import string
+
+ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
+
+@lm.user_loader
+def load_user(id):
+	return app_users.query.get(int(id))
+
+
+@app.before_request
+def before_rqeuest():	
+    g.user = current_user
+    g.search_form = SearchForm()
+
+
+# login required decorator
+def login_required(f):
+    @wraps(f)
+    def wrap(*args, **kwargs):
+        if 'logged_in' in session:
+            return f(*args, **kwargs)
+        else:
+            flash('You need to login first.')
+            return redirect(url_for('landing'))
+    return wrap
+
+
+@app.route("/")
+def landing():
+    login_form = LoginForm()
+    reg_form = RegistrationForm()
+    return render_template("Landing.html", login_form=login_form, reg_form = reg_form)    
+
+
+def home():
+	""" The home route """
+	g.search_form = SearchForm()
+	user = app_users.query.filter_by(email = current_user.email).first()
+	course = courses.query.filter_by(instructor_user_id = user.id).all()
+	return render_template('index.html', current_user=current_user, course=course)
+
+
+@app.route('/users/<user_id>/description')
+def user(user_id):
+	""" Responsible for rendering a page containing user data of a specific user """
+	login_form = LoginForm()
+	reg_form = RegistrationForm()
+	user = app_users.query.filter_by(id=user_id).first()
+	if user is None:
+		flash('User %s not found.' % user_id)
+		abort(400)
+	course = courses.query.filter_by(instructor_user_id = user.id).all()
+	results = []
+	for result in course:
+		
+		ratings = course_ratings.query.filter_by(course_id=result.course_id).all()
+		total_ratings = sum([r.rating for r in ratings])
+		no_of_ratings = course_ratings.query.filter_by(course_id=result.course_id).count()
+		if (total_ratings == 0) or (no_of_ratings == 0):
+			avg_ratings = 0
+		else:
+			avg_ratings = total_ratings / float(no_of_ratings)
+
+		description = ""
+		if result.description:
+			if (len(result.description) >= 200):
+				description = result.description[:200]
+				description = description + "..."
+			else:
+				description = result.description
+
+		d = {'course_id': result.course_id,
+			'name': result.name,
+			'description': description,
+			'rating': avg_ratings,
+			'image': result.photo_url
+			}
+		results.append(d)
+	following = user.followed.all()
+	followers = user.followers.all()
+	return render_template('user.html',
+							user=user,
+							course=results, following=following, followers=followers, login_form=login_form, reg_form=reg_form)
+
+@app.route("/login", methods=['GET', 'POST'])
+def login():
+	""" Responsible landing page responsible for logging in a user, 
+	check input via LoginForm found in forms.py """
+	error = None
+	login_form = LoginForm()
+	reg_form = RegistrationForm()
+	if g.user is not None and g.user.is_authenticated():
+		return redirect(url_for('landing'))
+	if request.method == 'POST':
+		login_form.email.data = request.form['email']
+		login_form.password.data = request.form['password']
+		if login_form.validate_on_submit() != False:
+			session['logged_in'] = True
+			user = app_users.query.filter_by(email = login_form.email.data).first()
+			login_user(user)
+			return redirect(url_for('profile'))
+	elif request.method == 'GET':
+		return render_template('Landing.html', login_form=login_form, reg_form=reg_form,)
+  	return render_template('Landing.html', error=login_form.errors, reg_form=reg_form, login_form=login_form)
+
+
+@app.route('/logout')
+@login_required
+def logout():
+	""" route to log user out of application """
+	logout_user();
+	session.pop('logged_in', None)
+	return redirect(url_for('landing'))
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+	""" Responsible for registering a new user into the application """
+	error = None
+	login_form = LoginForm()
+	reg_form = RegistrationForm()
+	if request.method == 'POST' and reg_form.validate_on_submit() != False:
+		user = app_users(email=reg_form.email.data, pw=reg_form.password.data)
+		db.session.add(user)
+		db.session.commit()
+		flash('Thanks for registering')
+		return redirect(url_for('login'))
+	elif request.method == 'POST' and reg_form.validate_on_submit() == False:
+		return render_template('Landing.html', login_form=login_form, reg_form=reg_form, error=reg_form.errors)
+	elif request.method == 'GET':
+		return render_template('Landing.html', reg_form=reg_form, error=error)
+
+
+@app.route('/courses/search', methods=['POST'])
+def search():
+	""" Search functionality for courses """
+	g.search_form = SearchForm()
+	
+	if not g.search_form.validate_on_submit():
+		return redirect(url_for('sample_course_list'))
+	return redirect(url_for('search_results', query=g.search_form.search.data))
+
+
+@app.route('/courses/search/results/<query>')
+def search_results(query):
+	""" Route responsible for returning search results """
+	login_form = LoginForm()
+	reg_form = RegistrationForm()
+	_query = '*' + query + '*'
+	course_results = courses.query.whoosh_search(_query, MAX_SEARCH_RESULTS).all()
+	return render_template('search_results.html', query=query, cresult=course_results, login_form=login_form, reg_form=reg_form)
+
+
+@app.route('/my-account/reset-email', methods=['GET', 'POST'])
+@login_required
+def reset_email():
+	""" Chnages users email """
+	g.reset_email_form = ResetEmailForm()
+	if request.method == 'POST' and g.reset_email_form.validate_on_submit() != False:
+		user = app_users.query.filter_by(email=current_user.email).first()
+		user.email = g.reset_email_form.new_email.data
+		db.session.commit()
+		flash("Your email address is updated")
+		return redirect(url_for('home'))
+	elif request.method == 'POST' and g.reset_email_form.validate_on_submit() == False:
+		return render_template('user/reset_email.html', error=g.reset_email_form.errors)
+	return render_template("user/reset_email.html", form=g.reset_email_form)
+
+@app.route('/courses/list', methods=['GET', 'POST'])
+@login_required
+def profile():
+	g.reset_pwd_form = ResetPasswordForm()	
+	
+	course_query = db.session.query(course_enrollments, courses).join(courses).filter(course_enrollments.enrolled_user == current_user.id).all()
+	created_course = courses.query.filter_by(instructor_user_id = current_user.id).all()
+	results = []
+	for result in course_query:
+		if current_user.id == result[1].instructor_user_id:
+			is_instructor = True
+		else:
+			is_instructor = False
+
+		ratings = course_ratings.query.filter_by(course_id=result[1].course_id).all()
+		total_ratings = sum([r.rating for r in ratings])
+		no_of_ratings = course_ratings.query.filter_by(course_id=result[1].course_id).count()
+		if (total_ratings == 0) or (no_of_ratings == 0):
+			avg_ratings = 0
+		else:
+			avg_ratings = total_ratings / float(no_of_ratings)
+
+		description = ""
+		if result[1].description:
+			if (len(result[1].description) >= 200):
+				description = result[1].description[:200]
+				description = description + "..."
+			else:
+				description = result.description
+
+		d = {'course_id': result[1].course_id,
+			'name': result[1].name,
+			'description': description,
+			'up_vote': result[1].up_vote,
+			'down_vote': result[1].down_vote,
+			'instructor_user_id': result[1].instructor_user_id,
+			'category_id': result[1].category_id,
+			'enrollment_date': result[0].enrollment_date.strftime("%Y-%m-%d"),
+			'rating': avg_ratings,
+			'is_instructor': is_instructor,
+			'image': result[1].photo_url}
+		results.append(d)
+	if request.method == 'POST' and g.reset_pwd_form.validate_on_submit() != False:
+		user = app_users.query.filter_by(email=current_user.email).first()
+		
+		user.pw = bcrypt.generate_password_hash(g.reset_pwd_form.new_password.data)
+		db.session.commit()
+	
+		flash("Your password is updated!", 'success')
+		return render_template('profile.html', courses=results)
+	elif request.method == 'POST' and g.reset_pwd_form.validate_on_submit() == False:
+		return render_template('profile.html', courses=results, error=g.reset_pwd_form.errors)
+	return render_template("profile.html", courses=results, created_course=created_course, form=g.reset_pwd_form)
+
+
+@app.route('/users/<user_id>/follow', methods=['GET', 'POST'])
+@login_required
+def follow(user_id):
+	""" Follow a particular user by id """
+	user = app_users.query.filter_by(id=user_id).first()
+	if user is None:
+		flash('User %s not found.' % user_id)
+		return redirect(url_for('home'))
+	if user == g.user:
+		flash('You can\'t follow yourself!')
+		return redirect(url_for('user', id=user_id))
+	u = g.user.follow(user)
+	if u is None:
+		flash('Cannot follow ' + user_id + '.')
+		return redirect(url_for('user', id=user_id))
+	db.session.add(u)
+	db.session.commit()
+	flash('You are now following ' + user_id + '!')
+	return redirect(url_for('user', user_id=user_id))
+
+
+@app.route('/users/<user_id>/unfollow', methods=['GET', 'POST'])
+@login_required
+def unfollow(user_id):
+	""" Un-follow a particular user by id """
+	user = app_users.query.filter_by(id=user_id).first()
+	if user is None:
+		flash('User %s not found.' % user_id)
+		return redirect(url_for('index'))
+	if user == g.user:
+		flash('You can\'t unfollow yourself!')
+		return redirect(url_for('user', id=user_id))
+	u = g.user.unfollow(user)
+	if u is None:
+		flash('Cannot unfollow ' + user_id + '.')
+		return redirect(url_for('user', id=user_id))
+	db.session.add(u)
+	db.session.commit()
+	flash('You have stopped following ' + user_id + '.')
+	return redirect(url_for('user', user_id=user_id))
+
+@app.route('/courses/<courseId>/description', methods=['GET', 'POST'])
+def course_description(courseId):
+	login_form = LoginForm()
+	reg_form = RegistrationForm()
+	course_data = courses.query.filter_by(course_id=courseId).first()
+	
+	if course_data:
+		user = app_users.query.filter_by(id = course_data.instructor_user_id).first()
+		course = {"course_id" : course_data.course_id,
+				"name" : course_data.name,
+				"description" : course_data.description,
+				"up_vote" : course_data.up_vote,
+				"down_vote" : course_data.down_vote,
+				"instructor_user_id" : user.id,
+				"instructor_user_email": user.email,
+				"image": course_data.photo_url}
+
+	comment_query = course_comments.query.filter_by(course_id=courseId).order_by(desc(course_comments.comment_date)).all()
+	comment_list = []
+	for comment in comment_query:
+		comment_name = app_users.query.filter_by(id=comment.user_id).first().email
+		d = {'comment': comment.comment,
+			'comment_date': comment.comment_date,
+			'commenter_name': comment_name}
+		comment_list.append(d)
+
+	videos_query = course_videos.query.filter_by(course_id=courseId).all()
+	video_list = []
+	for video in videos_query:
+		d = {'id': video.course_video_id,
+			'name': video.name}
+		video_list.append(d)
+	
+	ratings = course_ratings.query.filter_by(course_id=courseId).all()
+	total_ratings = sum([r.rating for r in ratings])
+	no_of_ratings = course_ratings.query.filter_by(course_id=courseId).count()
+	if (total_ratings == 0) or (no_of_ratings == 0):
+		avg_ratings = 0
+	else:
+		avg_ratings = total_ratings / float(no_of_ratings)
+
+	return render_template("courses/course.html", avg_ratings=avg_ratings, 
+							comments=comment_list, course=course, 
+							videos=video_list, login_form=login_form, 
+							reg_form=reg_form)  
+	abort(404)
+
+def get_catagory_list():
+    choices_list = []
+    categories_query = categories.query.all()
+    for cat in categories_query:
+        choice = (cat.category_id, cat.category_name)
+        choices_list.append(choice)
+    return choices_list
+
+@app.route('/courses/<courseId>/rate', methods=['POST'])
+@login_required
+def rate_course(courseId):
+	in_rating = request.form.get('rating')
+	print in_rating
+	try:
+		rating = int(in_rating)
+	except:
+		abort(400)
+
+	if rating <= 5 and rating >= 0:
+		course_rating = course_ratings.query.filter_by(user_id=current_user.id, course_id=courseId).first()
+		if course_rating:
+			course_rating.rating = rating
+		else:
+			db.session.add(course_ratings(rating, courseId, current_user.id))
+		db.session.commit()
+		return redirect(url_for('course_description', courseId=courseId))
+	abort(400)
+
+@app.route('/explorer', methods=['GET', 'POST'])
+def sample_course_list():
+	login_form = LoginForm()
+	reg_form = RegistrationForm()
+	value = [u'0']
+	if request.method == "POST":
+		value = request.form.getlist('check') 
+	course_query = []
+	if value[0] == '0':
+		course_query = db.session.query(courses).limit(20).all()
+	else:
+		course_query = courses.query.filter_by(category_id=value[0]).all()
+	results = []
+
+	for result in course_query:
+		ratings = course_ratings.query.filter_by(course_id=result.course_id).all()
+		total_ratings = sum([r.rating for r in ratings])
+		no_of_ratings = course_ratings.query.filter_by(course_id=result.course_id).count()
+		if (total_ratings == 0) or (no_of_ratings == 0):
+			avg_ratings = 0
+		else:
+			avg_ratings = total_ratings / float(no_of_ratings)
+		
+		description = ""
+		if result.description:
+			if (len(result.description) >= 200):
+				description = result.description[:200]
+				description = description + "..."
+			else:
+				description = result.description
+
+		d = {'course_id': result.course_id,
+			'name': result.name,
+			'description': description,
+			'up_vote': result.up_vote,
+			'down_vote': result.down_vote,
+			'rating': avg_ratings,
+			'instructor_user_id': result.instructor_user_id,
+			'image': result.photo_url}
+		results.append(d)
+	return render_template('courses/CoursePage.html', courses=results, login_form=login_form, reg_form=reg_form)
+
+# check that filename is of appropriate image type
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+
+@app.route('/courses/create', methods=['GET', 'POST'])
+@login_required
+def create_course():
+	error = None
+	create_course_form = CreateCourseForm()
+	create_course_form.category_id.choices = get_catagory_list()
+
+
+	if request.method == 'POST' and create_course_form.validate_on_submit():
+		name = request.form.get('name')
+		description = request.form.get('description')
+		category_id = request.form.get('category_id')
+
+		file = request.files['file']
+		if file and allowed_file(file.filename):
+			filename = (
+				''.join(
+					random.SystemRandom().choice(
+						string.ascii_uppercase + string.digits) for _ in range(25))) + os.path.splitext(
+				file.filename)[1]
+			file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+		course = courses(name=create_course_form.name.data,
+						description=create_course_form.description.data,
+						instructor_user_id=current_user.id,
+						category_id=create_course_form.category_id.data,
+						photo_url=filename)
+
+		db.session.add(course)
+		db.session.commit()
+		return redirect(url_for('course_description', courseId=course.course_id))
+
+	elif request.method == 'POST' and create_course_form.validate_on_submit() == False:
+		return render_template(
+			'courses/create-course.html', create_course_form=create_course_form,
+			error=create_course_form.errors)
+
+	elif request.method == 'GET':
+		return render_template("courses/create-course.html", create_course_form=create_course_form, error=error)
+
+def video_id(value):
+    """
+    Examples:
+    - http://youtu.be/SA2iWivDJiE
+    - http://www.youtube.com/watch?v=_oPAwA_Udwc&feature=feedu
+    - http://www.youtube.com/embed/SA2iWivDJiE
+    - http://www.youtube.com/v/SA2iWivDJiE?version=3&amp;hl=en_US
+    """
+    query = urlparse.urlparse(value)
+    if query.hostname == 'youtu.be':
+        return query.path[1:]
+    if query.hostname in ('www.youtube.com', 'youtube.com'):
+        if query.path == '/watch':
+            p = urlparse.parse_qs(query.query)
+            return p['v'][0]
+        if query.path[:7] == '/embed/':
+            return query.path.split('/')[2]
+        if query.path[:3] == '/v/':
+            return query.path.split('/')[2]
+    return None
+
+@app.route('/courses/<courseId>/videos/change', methods=['GET', 'POST'])
+@login_required
+def edit_course_videos(courseId):
+	course_data = courses.query.filter_by(course_id=courseId).first()
+
+	if not course_data:
+		return render_template('404_page.html')
+
+	#check if user can edit
+	if int(courses.query.filter_by(course_id=courseId).first().instructor_user_id) != int(current_user.id):
+		return render_template('404_page.html')
+
+	videos_query = course_videos.query.filter_by(course_id=courseId).order_by(course_videos.order).all()
+	video_list = []
+	for video in videos_query:
+		image_url = "http://img.youtube.com/vi/" + video_id(video.video_url) + "/0.jpg"
+		d = {'id': video.course_video_id,
+			'name': video.name,
+			'image_url': image_url,
+			'index': video.order}
+		video_list.append(d)
+
+	user = app_users.query.filter_by(id = course_data.instructor_user_id).first()
+	course = {"course_id" : course_data.course_id,
+			"name" : course_data.name,
+			"description" : course_data.description[0:400] + "...",
+			"up_vote" : course_data.up_vote,
+			"down_vote" : course_data.down_vote,
+			"instructor_user_id" : user.id,
+			"instructor_user_email": user.email}
+
+	return render_template("courses/edit-video.html", videos=video_list, course=course)
+
+@app.route('/courses/<courseId>/videos/<videoId>/delete')
+@login_required
+def delte_course_video(courseId, videoId):
+	videos_query_deleting = course_videos.query.filter_by(course_video_id=videoId).first()
+	video_questions = course_video_quiz_questions.query.filter_by(course_video_id=videoId).all()
+	if (not videos_query_deleting) or int(videos_query_deleting.course_id) != int(courseId):
+		return render_template('404_page.html')
+
+	if int(courses.query.filter_by(course_id=courseId).first().instructor_user_id) != int(current_user.id):
+		return render_template('404_page.html')
+
+	if video_questions:
+		for question in video_questions:
+			db.session.delete(question)
+		db.session.commit()
+
+	location_video = videos_query_deleting.order
+	videos_query = course_videos.query.filter_by(course_id=courseId).order_by(course_videos.order).all()
+	
+	for video in videos_query:
+		if video.order == location_video:
+			db.session.delete(video)
+		if video.order > location_video:
+			video.order = video.order - 1
+		
+	db.session.commit()
+
+	return redirect(url_for('edit_course_videos', courseId=courseId))
+
+@app.route('/courses/<courseId>/comment/add', methods=['POST'])
+@login_required
+def add_course_comment(courseId):
+	try: 
+		comment = request.form.get('comment')
+
+		if not comment:
+			abort(400)
+
+		db.session.add(course_comments(courseId, comment, current_user.id))
+		db.session.commit()
+		return redirect(url_for('course_description', courseId=courseId))
+	except:
+		abort(400)
+
+@app.route('/courses/<courseId>/edit', methods=['GET', 'POST'])
+@login_required
+def modify_course(courseId):
+	error = None
+	
+	course_from_db = courses.query.filter_by(course_id=courseId).first()
+	create_course_form = CreateCourseForm()
+	if not course_from_db:
+		return render_template('404_page.html')
+	if request.method == 'POST' and create_course_form.validate_on_submit()!= False:
+		course_from_db.name=create_course_form.name.data
+		course_from_db.description=create_course_form.description.data
+		course_from_db.category_id=create_course_form.category_id.data
+		db.session.commit()
+		return redirect(url_for('course_description', courseId=courseId))
+
+
+	elif request.method == 'POST' and create_course_form.validate_on_submit() == False:
+		create_course_form.name = create_course_form.name.data
+		create_course_form.description = create_course_form.description.data
+		create_course_form.category_id.choices = get_catagory_list()
+		return render_template(
+			'courses/edit-course.html', create_course_form=create_course_form,
+			error=create_course_form.errors)
+
+	elif request.method == 'GET':
+		create_course_form.name = course_from_db.name
+ 		create_course_form.description = course_from_db.description
+		create_course_form.category_id.choices = get_catagory_list()
+		return render_template('courses/edit-course.html', create_course_form=create_course_form, course_id=courseId, error=error)
+
+
+@app.route('/courses/<courseId>/videos/add', methods=['POST'])
+@login_required
+def add_video(courseId):
+	url = request.form.get('url')
+	name = request.form.get('name')
+	order = request.form.get('order')
+
+	if not url or not name:
+		abort(400)
+
+	course_from_db = courses.query.filter_by(course_id=courseId).first()
+	if not course_from_db:
+		abort(400)
+
+	#only the creater of the course can modify its name ext.
+	if course_from_db.instructor_user_id != current_user.id:
+		abort(400)
+
+	videos_count = course_videos.query.filter_by(course_id=courseId).count()
+	if int(order) > videos_count+1:
+		order = videos_count+1
+
+	videos_query = course_videos.query.filter_by(course_id=courseId).order_by(course_videos.order).all()
+	for video in videos_query:
+		if video.order >= int(order):
+			video.order = video.order + 1
+	db.session.commit()
+
+
+
+
+	db.session.add(course_videos(courseId,url,name,int(order)))
+	db.session.commit()
+
+	return redirect(url_for('edit_course_videos', courseId=courseId))
+
+@app.route('/courses/<courseId>/delete', methods=['GET','POST'])
+@login_required
+def delete_course(courseId):
+	
+	course = courses.query.filter_by(course_id=courseId).first()
+	video = course_videos.query.filter_by(course_id=courseId).all()
+	comments = course_comments.query.filter_by(course_id=courseId).all()
+	ratings = course_ratings.query.filter_by(course_id=courseId).all()
+	course_enrollment = course_enrollments.query.filter_by(course_id=courseId).all()
+	if not course:
+		abort(400)
+	#only the creater of the course can modify its name ext.
+	if course.instructor_user_id != current_user.id:
+		abort(400)
+	if video:    
+		for vid in video:
+			delte_course_video(courseId, vid.course_video_id)
+	#delete all comments
+	if comments:
+		for comment in comments:
+			db.session.delete(comment)
+	#delete all ratings
+	if ratings:
+		for rating in ratings:
+			db.session.delete(rating)
+	#remove enrollments
+	if course_enrollment:
+		for enrol in course_enrollment:
+			db.session.delete(enrol)
+
+	db.session.delete(course)
+	db.session.commit()
+	return redirect(url_for('profile'))
+
+
+@app.route('/courses/<courseId>/videos/<videoId>/<questionId>/delete', methods=['GET','POST'])
+@login_required
+def delete_video_question(courseId, videoId,questionId):
+	video = course_videos.query.filter_by(course_video_id=videoId).first()
+	course = courses.query.filter_by(course_id=courseId).first()
+	video_question = course_video_quiz_questions.query.filter_by(course_video_quiz_questions_id=questionId).first()
+	if not video_question or not video or not course:
+		abort(400)
+	#only the creater of the course can modify its name ext.
+	if course.instructor_user_id != current_user.id:
+		abort(400)
+
+	db.session.delete(video_question)
+	db.session.commit()
+	
+	return redirect(url_for('editquiz', courseId=courseId, videoId=videoId))
+
+
+@app.route('/courses/<courseId>/videos/<videoId>/add_question', methods=['GET','POST'])
+@login_required
+def add_question(courseId, videoId):
+
+	course_from_db = courses.query.filter_by(course_id=courseId).first()
+
+	question_time_min = request.form.get('min')
+	question_time_sec = request.form.get('sec')
+	question_time = (int(question_time_min) * 60) + int(question_time_sec)
+	question_string = request.form.get('question_string')
+	answer_choice = request.form.get('answer_choice')
+	choice_A = request.form.get('choice_A')
+	choice_B = request.form.get('choice_B')
+	choice_C = request.form.get('choice_C')
+	choice_D = request.form.get('choice_D')
+	
+	#only the creater of the course can modify its name ext.
+	if course_from_db.instructor_user_id != current_user.id:
+		abort(400)
+	
+	
+	if not question_time or not question_string or not answer_choice or not choice_A \
+	or not choice_B or not choice_C or not choice_D:
+		abort(400)
+	
+	db.session.add(course_video_quiz_questions(videoId, question_time, question_string, answer_choice, choice_A[0], choice_B[0], choice_C[0], choice_D[0]))
+	db.session.commit()
+	return redirect(url_for('editquiz', courseId=courseId, videoId=videoId))
+
+
+
+@app.route('/courses/<courseId>/subscribe', methods=['GET','POST'])
+@login_required
+def subscribe(courseId):
+	user = course_enrollments.query.filter_by(enrolled_user=current_user.id, course_id=courseId).first()
+	if user:
+		flash("You have subscribed to the class already")
+	else:
+		sub_course = course_enrollments(course_id=courseId, enrolled_user=current_user.id)
+		db.session.add(sub_course)
+		db.session.commit()
+	return redirect(url_for('profile'))
+
+
+@app.route('/courses/<courseId>/unsubscribe', methods=['GET','POST'])
+@login_required
+def unsubscribe(courseId):
+	sub_course = course_enrollments.query.filter_by(course_id=courseId, enrolled_user=current_user.id).first()
+	db.session.delete(sub_course)
+	db.session.commit()
+	flash("You have unsubscribed to the course successfully")
+
+	return redirect(url_for('profile'))
+
+
+@app.route("/courses/<courseId>/video/<videoId>/edit")
+@login_required
+def edit(courseId, videoId):
+	return render_template("courses/editVideo2.html", courseId=courseId, videoId=courseId)
+
+
+###
+# Video Route
+# Generates a video to be embeded by a frame
+# Optionally accepts query strings: ?height=xxx&width=yyy
+##
+@app.route("/video/<id>")
+def video(id):
+    video = course_videos.query.filter_by(course_video_id=id).first()
+    questions = course_video_quiz_questions.query.filter_by(course_video_id=id).order_by(
+    course_video_quiz_questions.question_time).all()
+    question_list = []
+
+    for question in questions:
+      q = {
+        'time': question.question_time,
+        'question_string': question.question_string,
+        'choice_A': question.choice_A,
+        'choice_B': question.choice_B,
+        'choice_C': question.choice_C,
+        'choice_D': question.choice_D,
+        'answer': question.answer_choice,
+        'question_id': question.course_video_quiz_questions_id,
+        'video_id': question.course_video_id
+      }
+      question_list.append(q)
+
+    height = request.args.get('height')
+    width = request.args.get('width')
+
+    video_object = {
+      'course_video_id': video.course_video_id,
+      'video_url': video.video_url,
+      'name': video.name,
+      'question_list': question_list,
+      'height': height or 360,
+      'width': width or 640
+    }
+
+    return render_template("video.html", video=video_object)
+
+
+
+#######for testing purposes: by eric######
+@app.route("/1")
+def home():
+    #return "Hello World!"
+	g.search_form = SearchForm()
+	user = app_users.query.filter_by(email = current_user.email).first()
+	course = courses.query.filter_by(instructor_user_id = user.id).all()
+	return render_template('index.html', current_user=current_user, course=course)
+
+@app.route("/course")
+def course():
+    login_form = LoginForm()
+    reg_form = RegistrationForm()	
+    return render_template("courses/course.html", login_form=login_form, reg_form = reg_form)
+
+@app.route("/editVideo")
+@login_required
+def editvid():
+    login_form = LoginForm()
+    reg_form = RegistrationForm()
+    return render_template("courses/editVideo2.html", login_form=login_form, reg_form = reg_form)
+
+
+@app.route("/editquiz/<courseId>/<videoId>", methods=['GET','POST'])
+@login_required
+def editquiz(courseId, videoId):
+    questions = course_video_quiz_questions.query.filter_by(course_video_id=videoId).order_by(course_video_quiz_questions.question_time).all()
+    video = course_videos.query.filter_by(course_video_id=videoId).first()
+    question_list = []
+
+    for question in questions:
+    	
+    	time_min = (question.question_time / 60)
+    	time_sec = (question.question_time % 60)    	
+    	q = {
+    	'time': question.question_time,
+    	'min': time_min,
+    	'sec': time_sec,
+        'question_string': question.question_string,
+        'choice_A': question.choice_A,
+        'choice_B': question.choice_B,
+        'choice_C': question.choice_C,
+        'choice_D': question.choice_D,
+        'answer': question.answer_choice,
+        'question_id': question.course_video_quiz_questions_id,
+        'video_id': question.course_video_id,
+        'course_id': courseId
+        }
+        question_list.append(q)
+    return render_template("courses/editquiz.html", courseId=courseId, videoId=videoId, video=video, questions=question_list)
+
+@app.route("/editquiz/<courseId>/<videoId>/<questionId>", methods=['GET','POST'])
+@login_required
+def editquizquestion(courseId, videoId, questionId):
+	
+	question = course_video_quiz_questions.query.filter_by(course_video_quiz_questions_id=questionId).first()
+	question_time_min = request.form.get('min')
+	question_time_sec = request.form.get('sec')
+	question_time = (int(question_time_min) * 60) + int(question_time_sec)
+	question_string = request.form.get('question_string')
+	answer_choice = request.form.get('answer_choice')
+	choice_A = request.form.get('choice_A')
+	choice_B = request.form.get('choice_B')
+	choice_C = request.form.get('choice_C')
+	choice_D = request.form.get('choice_D')
+	
+	question.question_time = question_time
+	question.question_string = question_string
+	question.answer_choice = answer_choice
+	question.choice_A = choice_A
+	question.choice_B = choice_B
+	question.choice_C = choice_C
+	question.choice_D = choice_D
+	
+	db.session.commit()
+	return redirect(url_for('editquiz', courseId=courseId, videoId=videoId))
+
+
+
+@app.route("/editCourse/<courseId>")
+@login_required
+def editCourse(courseId):
+	course_form = CreateCourseForm()
+	course_data = courses.query.filter_by(course_id=courseId).first()
+	return render_template("courses/editCourse.html", course=course_data, course_form=course_form)
+

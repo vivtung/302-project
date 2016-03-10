@@ -1,0 +1,126 @@
+{% from "_formhelpers.html" import render_field %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Landing Page</title>
+        <!--Implement Bootstrap-->
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap-theme.css') }}">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
+        <!--Customize CSS-->
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/landing.css') }}">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/navbar.css') }}">
+    </head>
+
+    <body>
+        <div id="wrap">
+            <img class="bgfade" style="background-attachment:scroll;width:100%;height:auto" src="../static/Img/Screen%20Shot%202015-02-27%20at%2010.01.45%20AM.png">
+            <img class="bgfade" style="background-attachment:scroll;width:100%;height:auto" src="../static/Img/Screen%20Shot%202015-02-26%20at%203.56.50%20PM.png">
+            <img class="bgfade" style="background-attachment:scroll;width:100%;height:auto" src="../static/Img/Screen%20Shot%202015-02-27%20at%2010.07.31%20AM.png">
+            <img class="bgfade" style="background-attachment:scroll;width:100%;height:auto" src="../static/Img/Screen%20Shot%202015-02-27%20at%2010.04.36%20AM.png">
+        </div>
+        <div id="dark-overlay"></div>
+
+        <div class="jumboBackGround">
+
+            <!--Nav Bar-->
+            <div class="navigation container">
+                <ul class="pull-left" id="nav-leftside">
+                  <li>
+                    {% if not g.user.is_authenticated() %}
+                      {% set nav_link = "landing" %}
+                    {% else %}
+                      {% set nav_link = "profile" %}
+                    {% endif %}
+                    <a href="{{ url_for(nav_link) }}">
+                      <h2>Youtube University</h2>
+                    </a>
+                  </li>
+                </ul>
+
+                <ul class="pull-right" id="not-login-nav-rightside">
+                    <li><a href="{{ url_for('sample_course_list') }}">Course</a></li>
+                  {% if not g.user.is_authenticated() %}
+                    <li><a href="#login" data-toggle="modal">Login</a></li>
+                    <li><a href="#signup" data-toggle="modal">Sign up</a></li>
+                  {% endif %}
+                  {%if g.user.is_authenticated() %}
+                   <li> <a href="{{ url_for('logout')}}">Logout</a></li>
+                  {% endif %}
+                </ul>
+
+            </div>
+
+            <div class="heroframe">
+                <h1 style="color:white">LEARN. PLAY. REPEAT.</h1>
+                <p>Largest Collection of Educational Video by the Youtube Community</p>
+                <p><a href="{{ url_for('sample_course_list') }}" class="btn hide-sm btn-contrast btn-large btn-semi-transparent how-it-works" id="heroFont">Explore Courses</a></p>
+            </div>
+        </div>
+
+        <div class="modal fade" id="signup" tabindex="-1" role= "dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h4>Sign Up</h4>
+					</div>
+					<div class="modal-body">
+                            <form method="post" action="{{ url_for('register') }}">
+                                    
+                                     {{ reg_form.email (placeholder="Please Enter Your Email", class="form-control") }}
+                                    <br>
+                                     {{ reg_form.password (placeholder="Please Enter Your Password", class="form-control") }}
+                                    <br>
+                                     {{ reg_form.confirm (placeholder="Please Confirm Your Password", class="form-control") }}
+
+                                    {{ reg_form.csrf_token }}
+                                    <br>
+                                <input type="submit" value="Sign Up" class="btn btn-primary">
+                            </form>
+                    </div>
+				</div>
+			</div>
+		</div>
+		<div class="modal fade" id="login" tabindex="-1" role= "dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h4>Login</h4>
+					</div>
+					<div class="modal-body">
+						<form action="{{ url_for('login') }}" method="post">
+							<div class="form-group">
+								<label for="email">Email:</label>
+								<input type="email" class="form-control" id="email" placeholder = "Please Enter Your Email" name="email" value="{{request.form.email }}">
+							</div>
+							<div class="form-group">
+								<label for="pwd">Password:</label>
+								<input type="password" class="form-control" id="pwd" placeholder = "Please Enter Your Password" name="password" value="{{request.form.password }}">
+							</div>
+                            {{ login_form.csrf_token }}
+			      	        <input type="submit" class="btn btn-primary" value="Login">
+						</form>
+					</div>
+      			</div>
+		    </div>
+		</div>
+
+        <!-- JQUERY -->
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        <script type="text/javascript">    
+            $(window).load(function(){
+              var dg_H = $(window).height(),
+                  dg_W = $(window).width();
+              $("img.bgfade").hide();
+              $('#wrap').css({'height':dg_H,'width':dg_W});
+              (function anim() {
+                  $("#wrap img.bgfade").first().appendTo('#wrap').fadeOut(1500);
+                  $("#wrap img").first().fadeIn(1500);
+                  setTimeout(anim, 5000);
+              })();
+            })
+            $(window).resize(function(){window.location.href=window.location.href})
+        </script>
+        <!-- Bootstrap -->
+		<script type="text/javascript" src="../static/js/bootstrap.js"></script>
+    </body>
+</html>

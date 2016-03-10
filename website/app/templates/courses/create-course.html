@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Create Course{% endblock %}
+{% block head %}
+	 <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+	 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/coursePage.css') }}">
+	 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/course.css') }}">
+	 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/editVideo2.css') }}">
+
+{% endblock %}
+{% block content %}
+
+<div class="container">
+	<div class="row centered">
+		<div class="col-lg-4 col-lg-offset-4">
+			<h1>Course Create</h1>
+			<hr>
+		</div>
+	</div><!-- /row -->
+
+	<div class="row">
+		<div class="col-lg-7 col-md-7 col-xs-12">
+			<form id="courseInfo" action="{{url_for('create_course') }}" method="POST" enctype="multipart/form-data">
+				<div class="form-group">
+					<label for="coursename">Course Name</label>
+					{{ create_course_form.name (placeholder="", class="form-control", id="name", maxlength="40") }} 
+				</div>
+				<div class="form-group">
+					<label for="courseDes">Description</label>
+					{{ create_course_form.description (rows="5",class="form-control") }}
+				</div>
+				<div class="form-group">
+					<label for="category_id">Category:</label>
+					{{ create_course_form.category_id (class="form-control input-lg") }}
+				</div>
+				<div class="form-group">
+					<label for="name">Picture:</label>
+					<input id="file" type="file" multiple="true" name="file">
+				</div>
+				{{ create_course_form.hidden_tag() }}
+				<input type="submit" class="btn btn-primary" value="submit">
+			</form>
+		</div>
+	</div>
+</div>
+
+{% endblock %}
+{% block script %}
+	<script type="text/javascript" src="{{ url_for('static', filename='js/videoEdit2.js') }}"></script>
+{% endblock %}
+

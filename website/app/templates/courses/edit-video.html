@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Edit Course Videos{% endblock %}
+{% block head %}
+   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/edit-video.css') }}">
+
+{% endblock %}
+{% block content %}
+
+<div class="container-top">
+        <div class="row centered">
+        <div class="col-lg-4 col-lg-offset-4">
+          <h1>{{ course.name }}</h1>
+          <div><i class="fa fa-user"></i> <a href="{{ url_for('user', user_id=course.instructor_user_id) }}">created by {{ course.instructor_user_email }}</a></div>
+          <hr>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-lg-7 col-md-7 col-xs-12">
+          <h3><b>Course Description:</b></h3>
+                    <p>{{ course.description }}</p>
+                    <br>
+        </div>
+
+        <!--Add your picture here-->
+        <div class="col-lg-5 col-md-5 col-xs-12">
+          <div class="container-fliud">
+            <img id= "image" src="{{ url_for('static', filename='Img/flat_youtube_wallpaper_by_oscagapotes-d6o637w.png') }}"></img>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="panel">
+        <div class="panel-body">
+          {% if videos is defined %}
+          {% for video in videos %} 
+          <div class="row">    
+            <div class="col-md-2 text-center">
+              <a class="story-img" href="#"><img src="{{video.image_url}}" style="width:100px;height:100px" class="img-circle"></a>
+            </div>
+            <div class="video-name">
+              <h3>{{video.name}}</h3>
+            </div>
+            <div class="button-edit">
+              <a href="{{ url_for('editquiz', courseId=course.course_id, videoId=video.id)}}" class="btn btn-primary"> Edit <i class="glyphicon glyphicon-chevron-right"></i></a>
+            </div>
+            <div class="button-delete">
+              <a href="/courses/{{course.course_id}}/videos/{{video.id}}/delete" class="btn btn-danger"> Delete <i class="glyphicon glyphicon-remove"></i></a>
+            </div>
+          </div>
+          <hr>
+          {% endfor %}
+          {% endif %}
+
+          <div class="row">    
+            <div class="col-md-2 text-center">
+              <a class="story-img" href="#" data-toggle="modal" data-target="#myModal"><img src="http://www.clipartbest.com/cliparts/9cR/RRn/9cRRRn5Mi.jpeg" style="width:100px;height:100px" class="img-circle"></a>
+            </div>
+            <div class="video-name" data-toggle="modal" data-target="#myModal">
+              <a href="#"><h3>Add Another Video</h3></a>
+            </div>
+          </div>
+
+          <!-- Modal -->
+          <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  <h4 class="modal-title" id="myModalLabel">Add A Video</h4>
+                </div>
+                <form id="courseInfo" action="/courses/{{course.course_id}}/videos/add" method="POST">
+                  <div class="modal-body">
+                    <label for="coursename">Video Name:</label>
+                    <input class="form-control input-sm chat-input" id="name" name="name" maxlength="40">
+                    <label for="coursename">Url:</label>
+                    <input class="form-control input-sm chat-input" id="url" name="url" maxlength="40">
+                    <label for="coursename">Location Number:</label>
+                    <input class="form-control input-sm chat-input" id="order" name="order" maxlength="3">
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <input type="submit" class="btn btn-primary" value="Submit">
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>                                       
+   	</div><!--/col-12-->
+  </div>
+  			<a href="{{ url_for('course_description', courseId=course.course_id) }}" class="btn btn-info" role="button">Back</a>
+
+</div>
+
+{% endblock %}     
+
+{% block script %}
+<script type="text/javascript" src="{{ url_for('static', filename='js/edit-video.js')}}"></script>
+{% endblock %}                               
+   

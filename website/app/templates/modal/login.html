@@ -1,0 +1,34 @@
+<div class="modal fade" id="login" tabindex="-1" role= "dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4>Login</h4>
+      </div>
+      <div class="modal-body">
+        <form id="login" action="/login" method="post">
+          {{ login_form.csrf_token }}
+          <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" class="form-control" id="email" name="email"
+                   placeholder="Please Enter Your Email" value="{{ request.form.email }}">
+          </div>
+          <div class="form-group">
+            <label for="pwd">Password:</label>
+            <input type="password" class="form-control" id="pwd" name="password"
+                   placeholder="Please Enter Your Password" value="{{ request.form.password }}">
+          </div>
+          
+        </form>
+          <button type="button" class="btn btn-primary" onclick="submitLoginForm()">Log In</button>
+      </div>
+    
+    </div>
+  </div>
+</div>
+
+<script>
+  function submitLoginForm() {
+    $('form#login').submit();
+    console.log("hi");
+  }
+</script>

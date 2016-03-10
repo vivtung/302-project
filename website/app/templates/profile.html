@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}profile{% endblock %}
+{% block head %}
+        <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">  
+		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/coursePage.css') }}">
+{% endblock %}
+
+{% block content %}
+		<div class="container">
+		
+			<div id="extraPadding">	 	
+				<div class="row">
+				 		<h2 class="page-header">My Courses</h2>
+		                {% if created_course is defined %}
+		                	{% for course in created_course %}
+							  <div class="col-sm-6 col-md-4">
+			                    <div class="thumbnail">
+			                      <img src="/static/photos/uploads/{{course.photo_url}}" alt="class">
+			                      <div class="caption">
+			                        <h3>{{ course.name }}</h3>
+			                         <p>{{ course.description }}</p>
+			                        <p>
+			                        	<a href="{{ url_for('course_description', courseId=course.course_id) }}" class="btn btn-primary" role="button">GO</a>
+			                        	 <a href="/courses/{{course.course_id}}/videos/change" class="btn btn-warning"> Modify</a>
+			                        	<a href="{{ url_for('delete_course', courseId=course.course_id) }}" type="submit" class="btn btn-danger" role="button">Delete Course</a>
+			                        </p>
+			                      </div>
+			                    </div>
+			                  </div>
+		                	{% endfor %}
+		                {% else %}
+		                <h3>You don't have any subscribed courses</h3>
+		                {% endif %}
+				</div>
+			 	<div class="row">
+			 		<h2 class="page-header">Subscribed Courses</h2>
+	                {% if courses is defined %}
+	                	{% for course in courses %}
+						  <div class="col-sm-6 col-md-4">
+		                    <div class="thumbnail">
+		                      <img src="/static/photos/uploads/{{course.image}}" alt="class">
+		                      <div class="caption">
+		                        <h3>{{ course.name }}</h3>
+		                         <p>Rating: {{ course.rating | round(1, 'floor') }} / 5</p>
+		                         <p>{{ course.description }}</p>
+		                         <p>
+		                         	<a href="{{ url_for('course_description', courseId=course.course_id) }}" class="btn btn-primary" role="button">GO</a>
+				                    <a href="{{ url_for('unsubscribe', courseId=course.course_id)}}" type="submit" class="btn btn-danger" role="button">Unsubscribe</a>                        	
+		                         </p>
+		                      </div>
+		                    </div>
+		                  </div>
+	                	{% endfor %}
+	                {% else %}
+	                <h3>You don't have any subscribed courses</h3>
+	                {% endif %}
+			 	</div>				
+
+
+
+			<div class="row">
+			<h2 class="page-header">Profile Details</h2>
+			    <div class="col-md-8 col-sm-6 col-xs-12 personal-info">
+			   		<a href="{{ url_for('user', user_id=current_user.id) }}" class="btn btn-info" role="button">View Your Profile</a>
+			      	<h3>Change your password</h3>
+			      	<form class="form-horizontal" role="form" method=post action="{{ url_for('profile') }}">
+			        	<div class="form-group">
+			          		<label class="col-md-3 control-label">Old Password:</label>
+			          		<div class="col-md-8">
+							{{ g.reset_pwd_form.old_password (placeholder="enter your old password", class="form-control") }}
+			          		</div>
+			        	</div>			      		
+			        	<div class="form-group">
+			          		<label class="col-md-3 control-label">Password:</label>
+			          		<div class="col-md-8">
+			          		{{ g.reset_pwd_form.new_password (placeholder="enter your new password", class="form-control") }}
+			          		</div>
+			        	</div>
+			        	<div class="form-group">
+			          		<label class="col-md-3 control-label">Confirm password:</label>
+			          		<div class="col-md-8">
+							{{ g.reset_pwd_form.confirm (placeholder="enter your new password", class="form-control") }}
+			          		</div>
+			        	</div>
+			        	{{ g.reset_pwd_form.csrf_token }}
+			        	<div class="form-group">
+			        		<label class="col-md-3 control-label"></label>
+			          		<div class="col-md-8">
+			            		<input class="btn btn-primary" value="Save Changes" type="submit">
+			            		<span></span>
+			            		<input class="btn btn-default" value="Cancel" type="reset">
+			          		</div>
+			        	</div>
+			      	</form>
+			    </div>
+			</div>
+	
+{% endblock %}

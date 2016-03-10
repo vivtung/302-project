@@ -1,0 +1,100 @@
+{% from "_formhelpers.html" import render_field %}
+<!DOCTYPE html>
+<html>
+  <head>
+      <title>{% block title %}{% endblock %}</title>
+
+      <!--Implement Bootstrap-->
+      <link rel="stylesheet" type="text/css" href = "{{ url_for('static', filename='css/bootstrap-theme.css') }}">
+      <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
+      <!--Customize CSS-->  
+      <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/landing.css') }}">
+      <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/globalnav.css') }}">
+
+      <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+
+      {% block head %}{% endblock %}
+  </head>
+
+  <body>
+	<nav class="navbar navbar-default">
+		<div class="container-fluid">
+			<div class="navbar-header">
+              {% if not g.user.is_authenticated() %}
+                {% set nav_link = "landing" %}
+              {% else %}
+                {% set nav_link = "profile" %}
+              {% endif %}
+              <a class="navbar-brand" href="{{ url_for(nav_link) }}"
+                 style="font-size:24pt;margin-left:25px">
+                <b>Youtube University</b>
+              </a>
+			</div>
+
+		<div>
+			{% if not g.user.is_authenticated() %}
+			<ul class="nav navbar-nav navbar-right">
+				{% include 'modal/login.html' %}
+				{% include 'modal/signup.html' %}
+				<li><a href="{{ url_for('sample_course_list') }}">Course</a></li>
+				<li><a href="#login" data-toggle="modal">Login</a></li>
+				<li><a href="#signup" data-toggle="modal">Sign up</a></li>
+			</ul>
+			{% else %}
+			<ul class="nav navbar-nav navbar-right">
+        <li><a href="{{ url_for('create_course') }}">Create Course</a></li>
+				<li><a href="{{ url_for('sample_course_list') }}">Course</a></li>
+				<li class="dropdown">
+					<a class="dropdown-toggle" data-toggle="dropdown" href="#">
+						<span class="glyphicon glyphicon-th"></span>
+						<span class="caret"></span></a>
+						<ul class="dropdown-menu">
+							<li><a href="{{ url_for('profile') }}">Profile</a></li>
+							<li><a href="{{ url_for('logout') }}">Log out</a></li>
+						</ul>
+				</li>
+			</ul>
+			{% endif %}
+		</div>
+		</div>
+	</nav>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+              
+              {% for category, message in messages %}
+               
+                
+                <div class="alert alert-{{ category }}">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    {{ message }}
+                </div>
+                
+              {% endfor %}
+            
+              {% endif %}
+            {% endwith %}
+
+
+
+
+    <!-- child template -->
+    {% block content %}{% endblock %}
+
+    <!-- errors -->
+<!--     {% if error %}
+      <p class="error"><strong>Error:</strong> {{ error }}</p>
+    {% endif %} -->
+
+  </div>
+
+<hr><br><br>
+
+  <script src="//rawgit.com/vvo/lazyload/master/build/lazyload.min.js"></script>
+  <!-- Bootstrap -->
+  <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
+
+  {% block script %}{% endblock %}
+
+  </body>
+</html>

@@ -1,0 +1,60 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ video.name or "Video Player Frame" }}</title>
+
+    <link rel="stylesheet" href="//vjs.zencdn.net/4.12/video-js.css">
+    <link rel="stylesheet" href="//rawgit.com/spchuang/videojs-markers/c6dfe57e0a447b0eb0764f568a45a7f7c892ca76/dist/videojs.markers.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='player/src/videojs.popquiz.css') }}">
+
+    <script src="//vjs.zencdn.net/4.12/video.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="//rawgit.com/eXon/videojs-youtube/9d81a1b8768e9f3929fbae81ba913510ca20133b/src/youtube.js"></script>
+    <script src="//rawgit.com/spchuang/videojs-markers/c6dfe57e0a447b0eb0764f568a45a7f7c892ca76/dist/videojs-markers.min.js"></script>
+    <script src="{{ url_for('static', filename='player/src/videojs.popquiz.js') }}"></script>
+  </head>
+
+  <body style="margin: 0">
+    <video id="player" class="video-js vjs-default-skin vjs-big-play-centered"></video>
+    <script>
+      videojs('player', {
+        controls: true,
+//        autoplay: true,
+        nativeControlsForTouch: false,
+        width: '{{ video.width }}',
+        height: '{{ video.height }}',
+        plugins: {
+          popquiz: {
+            data: [
+              {% for question in video.question_list %}
+                {
+                  time: {{ question.time }},
+                  question: '{{ question.question_string }}',
+                  options: [
+                    ['{{ question.choice_A }}', {{ "true" if question.answer == "A" else "false" }}],
+                    ['{{ question.choice_B }}', {{ "true" if question.answer == "B" else "false" }}],
+                    ['{{ question.choice_C }}', {{ "true" if question.answer == "C" else "false" }}],
+                    ['{{ question.choice_D }}', {{ "true" if question.answer == "D" else "false" }}]
+                  ]
+                },
+              {% endfor %}
+            ]
+          }
+        },
+        techOrder: ["youtube"],
+        src: "{{ video.video_url }}"
+      });
+
+      function playVideo() {
+        videojs('player').play();
+      }
+
+      function pauseVideo() {
+        videojs('player').pause();
+      }
+    </script>
+  </body>
+</html>

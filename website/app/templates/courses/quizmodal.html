@@ -1,0 +1,36 @@
+{%if question is defined%}
+
+
+					<form action="{{url_for('editquizquestion', courseId=question.course_id, videoId=question.video_id, questionId=question.question_id) }}" method="POST">
+											<div class="form-group">
+							<label>Time:</label> <br>
+							<input type="text" name="min" value="{{ question.min }}"></input> : 
+							<input type="text" name="sec" value="{{ question.sec }}"></input>
+						</div>
+						<div class="form-group">
+							<label>Question text</label>
+							<textarea type="text" name="question_string" class="form-control">{{ question.question_string }}</textarea>
+						</div>
+						<div class="form-group">
+							<label>4 Multiple Choices</label>
+							<input type="text" name="choice_A" class="form-control" style="display:inline" value={{question.choice_A}}></input>
+							<input type="text" name="choice_B" class="form-control" style="display:inline" value={{question.choice_B}}></input>
+							<input type="text" name="choice_C" class="form-control" style="display:inline" value={{question.choice_C}}></input>
+							<input type="text" name="choice_D" class="form-control" style="display:inline" value={{question.choice_D}}></input>
+						</div>
+						<div class="form-group">
+							<label for="answer_choice">Correct Answer Choice</label>
+							<input type="text" name="answer_choice" id="answer_choice" class="form-control" style="display:inline" value={{question.answer}}></input>
+
+						<!--	<select class="form-control" id="answer_choice" name="answer_choice">
+								<option value="A">A</option>
+								<option value="B">B</option>
+								<option value="C">C</option>
+								<option value="D">D</option>
+							</select>	-->						
+						</div>
+						<input type="submit" class="btn btn-success"></input>
+					
+					</form>
+
+{%endif%}

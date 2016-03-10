@@ -1,0 +1,32 @@
+body {
+	margin: 0;
+	top: 0;
+	z-index: 1;
+}
+.navbar {
+	top: 0;
+	margin-top: 0;
+	width: 100%;
+	display: inline-block;
+	height: 35px;
+	text-align: left;
+	padding-top: 15px;
+	font-size: 27px;
+	background-color: #E60000;
+	color: white; 
+	box-shadow: 1px 1px 1px #E60000;
+	z-index: 1;
+}
+
+.navbar .left-side  {
+	float: left;
+	margin-left: 15%;
+	background-color: #E60000;
+}
+
+.navbar .right-side {
+	float: right;
+	margin-right: 5%;
+	word-spacing: 10px;
+	background-color: #E60000;
+}

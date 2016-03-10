@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Videojs Pop Quizzes</title>
+
+    <!-- bower-->
+    <link href="bower_components/videojs/dist/video-js/video-js.min.css" rel="stylesheet">
+    <link href="bower_components/videojs-markers/dist/videojs.markers.min.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="bower_components/videojs/dist/video-js/video.js"></script>
+    <script src="bower_components/videojs-markers/dist/videojs-markers.min.js"></script>
+
+    <!-- src -->
+    <link href="src/videojs.popquiz.css" rel="stylesheet">
+    <script src="src/videojs.popquiz.js"></script>
+  </head>
+
+  <body>
+    <video id="player" class="video-js vjs-default-skin vjs-big-play-centered">
+      <source src="data/video.mp4" type="video/mp4">
+    </video>
+    <script>
+      videojs('player', {
+        controls: true,
+        nativeControlsForTouch: false,
+        width: 640,
+        height: 360,
+        plugins: {
+          popquiz: {
+            data: [
+              {
+                time: 2,
+                question: 'Please select the odd numbers',
+                options: [
+                  ['1', true],
+                  ['2', false],
+                  ['9', true],
+                  ['11', true],
+                  ['banana', false]
+                ]
+              },
+              {
+                time: 5,
+                question: '1 + 1 = 2',
+                options: [
+                  ['true', true],
+                  ['false', false],
+                  ['neither', false]
+                ]
+              }
+            ]
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

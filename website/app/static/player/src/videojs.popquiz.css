@@ -1,0 +1,65 @@
+.vjs-default-skin > .vjs-popquiz {
+  position: absolute;
+  background-color: #DDD;
+  color: #333;
+  opacity: 0.95;
+}
+
+.vjs-default-skin > .vjs-popquiz > section.popquiz {
+  padding: 1.5em;
+  font-size: 16px;
+}
+
+.vjs-default-skin > .vjs-popquiz > section.popquiz header > h2 {
+  background-color: #ABC;
+  color: white;
+  padding: 0.5em;
+  border-radius: 0.5em;
+}
+
+.vjs-default-skin > .vjs-popquiz > section.popquiz form {
+  position: absolute;
+}
+
+.vjs-default-skin > .vjs-popquiz > section.popquiz form > label {
+  cursor: pointer;
+  padding-left: 25px;
+  margin-right: 15px;
+}
+
+.vjs-default-skin > .vjs-popquiz > section.popquiz form > input[type=checkbox] {
+  display: none
+}
+
+/* checkbox replacement */
+.vjs-default-skin > .vjs-popquiz > section.popquiz form > label:before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  margin-right: 10px;
+  position: absolute;
+  left: 0;
+  background-color: #AAA;
+  border-radius: 3px;
+  box-shadow: inset 0px 2px 3px 0px rgba(0, 0, 0, .3),
+    0px 1px 0px 0px rgba(255, 255, 255, .8);
+}
+
+.vjs-default-skin > .vjs-popquiz > section.popquiz form >
+input[type=checkbox]:checked + label:before {
+  content: "\2713";
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, .2);
+  font-size: 12px;
+  color: #EEE;
+  text-align: center;
+}
+
+.vjs-default-skin > .vjs-popquiz > section.popquiz .submit-buttons {
+  position: absolute;
+  bottom: 1em;
+  right: 0px;
+}
+
+.vjs-default-skin > .vjs-popquiz > section.popquiz .submit-buttons > input {
+  margin: 3px;
+}

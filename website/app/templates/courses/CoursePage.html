@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Course Explorer{% endblock %}
+
+ {% block head %}
+<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">  
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/coursePage.css') }}"> 
+{% endblock %} 
+
+{% block content %}
+
+<div id="jumbo">
+    <div>
+
+        <h1 id="titletext">World's Classroom</h1>
+        <div id="searchbar">
+            <div class="center-block">
+                <div class="input-group" id="hero_search">
+                    <form action="{{url_for('search')}}" class="navbar-form" id="search" method="post" name="search">
+                        {{ g.search_form.hidden_tag() }}{{ g.search_form.search(size=65, placeholder = "Search and learn!") }}
+                        </br>
+                        </br>
+                        <button class="btn" id="search_button" type="submit" value="Search">search</button>
+                    </form>
+
+                </div>
+                <!-- /input-group -->
+            </div>
+            <!-- /.col-lg-6 -->
+        </div>
+        <!-- /.row -->
+    </div>
+</div>
+
+</br>
+
+
+<div class="container-fluid">
+   
+        <div class="row-fluid">
+        <div class="span2">
+            <div class="col-md-3" id="">
+                <div class="checkbox">
+                    <form action="{{ url_for('sample_course_list') }}" method="post">
+                        <label>
+                            <input type="radio" name="check" value="0" checked> All
+                            <br>
+                            <br>
+                            <input type="radio" name="check" value='1'> Design
+                            <br>
+                            <br>
+                            <input type="radio" name="check" value='2'> Web
+                            <br>
+                            <br>
+                            <input type="radio" name="check" value='3'> Business
+                            <br>
+                            <br>
+                            <input type="radio" name="check" value='4'> 3D+Animation
+                            <br>
+                            <br>
+                            <input type="radio" name="check" value='5'> Music
+                            <br>
+                            <br>
+                        </label>
+                        <p>
+                            <button type="submit" class="btn btn-primary" role="button">Apply</button>
+                        </p>
+                    </form>
+                </div>
+            </div>
+
+</div>
+<div class="span10">
+            {% if courses is defined %}
+            
+             {% for course in courses %}             
+            <div class="col-md-3 col-sm-6">
+                <div class="thumbnail">
+                    <img src="/static/photos/uploads/{{course.image}}" alt="class">
+                    <div class="caption">
+                        <h3>{{ course.name }}</h3>
+                        <p>Rating: {{ course.rating| round(1, 'floor') }} / 5</p>
+                        <p>{{ course.description }}</p>
+                        <p><a href="{{ url_for('course_description', courseId=course.course_id) }}" class="btn btn-primary" role="button">GO</a> {% if g.user.is_authenticated() %}
+                            <a href="{{ url_for('subscribe', courseId=course.course_id)}}" type="submit" class="btn btn-danger" role="button">Subscribe!</a> {% endif %}
+                        </p>
+                    </div>
+                    <!-- end div caption class -->
+                </div>
+                <!-- thumbnail -->
+            </div>
+       
+            <!-- column -->
+            {% endfor %} {% endif %}
+        </div>
+        <!-- row -->
+    </div>
+    
+  
+</div>
+<!-- container -->
+{% endblock %}

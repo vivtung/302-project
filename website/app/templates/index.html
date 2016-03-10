@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Welcome!</h1>
+  <div>
+    <h2>User Profile</h2>
+    <p>Your email address is {{ current_user.email }}</p>
+
+    {% if course is defined %}
+      {% for c in course %}
+        <p>Courses that you have created:</p>
+        <h3>{{ c.name }}</h3>
+        <p>{{ c.description }} </p>
+      {% endfor %}
+    {% else %}
+      <p>you didnt create any courses</p>
+    {%endif%}
+
+    <p>Click <a href="/logout">here</a> to logout.</p>
+    <p>Click <a href="{{ url_for('profile') }}">here</a> to go to your profile</p>
+    <p>Click <a href="{{ url_for('reset_email') }}">here</a> to do reset email</p>
+    <form action="{{url_for('search')}}" class="navbar-form" id="search"method="post" name="search">
+      {{ g.search_form.hidden_tag() }}{{ g.search_form.search(size=25) }}
+      <button class="btn btn-default glyphicon glyphicon-search"
+              style="font-style: italic" type="submit" value="Search">
+      </button>
+    </form>
+  </div>
+{% endblock %}

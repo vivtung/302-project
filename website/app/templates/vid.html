@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Video test page{% endblock %}
+{% block head %}
+  <link rel="stylesheet" href="//vjs.zencdn.net/4.12/video-js.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='player/src/videojs.popquiz.css') }}">
+
+  <script src="//vjs.zencdn.net/4.12/video.js"></script>
+  <script src="//rawgit.com/eXon/videojs-youtube/9d81a1b8768e9f3929fbae81ba913510ca20133b/src/youtube.js"></script>
+  <script src="{{ url_for('static', filename='player/src/videojs.popquiz.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+  <video id="player" class="video-js vjs-default-skin vjs-big-play-centered"></video>
+  <script>
+    videojs('player', {
+      controls: true,
+      autoplay: true,
+      nativeControlsForTouch: false,
+      width: 640,
+      height: 360,
+      plugins: {
+        popquiz: {
+          data: [
+            {
+              time: 15,
+              question: 'Please select the odd numbers',
+              options: [
+                ['1', true],
+                ['2', false],
+                ['9', true],
+                ['11', true],
+                ['banana', false]
+              ]
+            },
+            {
+              time: 8,
+              question: '1 + 1 = 2',
+              options: [
+                ['true', true],
+                ['false', false],
+                ['neither', false]
+              ]
+            }
+          ]
+        }
+      },
+      techOrder: ["youtube"],
+      src: "https://www.youtube.com/watch?v=AuX7nPBqDts"
+    });
+  </script>
+{% endblock %}

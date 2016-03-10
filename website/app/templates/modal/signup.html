@@ -1,0 +1,23 @@
+<div class="modal fade" id="signup" tabindex="-1" role= "dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4>Sign Up</h4>
+      </div>
+      <div class="modal-body">
+       <form method="post" action="{{ url_for('register') }}">
+                                    
+                                     {{ reg_form.email (placeholder="Please Enter Your Email", class="form-control") }}
+                                    <br>
+                                     {{ reg_form.password (placeholder="Please Enter Your Password", class="form-control") }}
+                                    <br>
+                                     {{ reg_form.confirm (placeholder="Please Confirm Your Password", class="form-control") }}
+
+                                    {{ reg_form.csrf_token }}
+                                    <br>
+<input type="submit" value="Sign Up" class="btn btn-primary">                            </form>
+       
+      </div>
+    </div>
+  </div>
+</div>

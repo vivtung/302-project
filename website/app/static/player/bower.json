@@ -1,0 +1,20 @@
+{
+  "name": "videojs-popquiz",
+  "version": "0.0.1",
+  "description": "Provides pop-quiz feature for videojs",
+  "license": "MIT",
+  "main": [
+    "./src/videojs.popquiz.js",
+    "./src/videojs.popquiz.css"
+  ],
+  "ignore": [
+    "bower_components",
+    "example.html"
+  ],
+  "dependencies": {
+    "videojs-markers": "0.4.0"
+  },
+  "devDependencies": {
+    "videojs": "^4.7.2"
+  }
+}
